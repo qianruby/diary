@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成功日记</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f3ee;
+    --page: #ffffff;
+    --border: #dddbd4;
+    --border-light: #edecea;
+    --text: #2a2926;
+    --text-muted: #8a8880;
+    --text-faint: #b8b6af;
+    --teal: #1D9E75;
+    --teal-light: #e1f5ee;
+    --purple: #7F77DD;
+    --purple-light: #eeedfe;
+    --amber: #BA7517;
+    --amber-light: #faeeda;
+    --gray-dot: #aaa89f;
+    --red: #D85A30;
+    --blue: #378ADD;
+    --today-bg: #fffbf3;
+    --today-border: #BA7517;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 32px 24px;
+    color: var(--text);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .month-display {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .year-display {
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover {
+    background: var(--border-light);
+    color: var(--text);
+  }
+
+  .today-btn {
+    padding: 0 14px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans SC', sans-serif;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+
+  .today-btn:hover {
+    background: var(--border-light);
+    color: var(--text);
+  }
+
+  /* Calendar */
+  .calendar {
+    background: var(--page);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .dow-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dow {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 10px 0;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+  }
+  .dow.sun { color: var(--red); }
+  .dow.sat { color: var(--blue); }
+
+  .weeks {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .week-row:last-child { border-bottom: none; }
+
+  .day {
+    border-right: 1px solid var(--border-light);
+    min-height: 140px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+
+  .day:last-child { border-right: none; }
+  .day.empty { background: #faf9f7; cursor: default; }
+  .day.today { background: var(--today-bg); }
+  .day.today::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--today-border);
+  }
+
+  .day:not(.empty):hover { background: #fafaf8; }
+  .day.today:hover { background: #fff8ed; }
+
+  .day-num {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+
+  .day.sun .day-num { color: var(--red); }
+  .day.sat .day-num { color: var(--blue); }
+  .day.today .day-num { color: var(--amber); font-weight: 500; }
+
+  .entry-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .dot-teal   { background: var(--teal); }
+  .dot-purple { background: var(--purple); }
+  .dot-amber  { background: var(--amber); }
+  .dot-gray   { background: var(--gray-dot); }
+
+  .entry-text {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--page);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 480px;
+    max-width: 90vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  .modal-date {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  .modal-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .entries-list { margin-bottom: 16px; }
+
+  .entry-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .color-select {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .color-picker {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .color-opt {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+    transition: border-color 0.1s;
+  }
+
+  .color-opt.selected { border-color: var(--text); }
+
+  .entry-input {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 4px;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    color: var(--text);
+    background: transparent;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .entry-input:focus { border-bottom-color: var(--teal); }
+
+  .remove-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+
+  .remove-btn:hover { background: #fde8e8; color: var(--red); }
+
+  .add-entry-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+    margin-top: 4px;
+  }
+
+  .add-entry-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn-cancel {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover { background: var(--border-light); }
+
+  .btn-save {
+    padding: 8px 20px;
+    border: none;
+    background: var(--teal);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .btn-save:hover { background: #0F6E56; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <span class="month-display" id="monthDisplay"></span>
+      <span class="year-display" id="yearDisplay"></span>
+    </div>
+    <div class="nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+      <button class="today-btn" onclick="goToday()">今天</button>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+
+  <div class="calendar">
+    <div class="dow-row">
+      <div class="dow sun">Sun</div>
+      <div class="dow">Mon</div>
+      <div class="dow">Tue</div>
+      <div class="dow">Wed</div>
+      <div class="dow">Thu</div>
+      <div class="dow">Fri</div>
+      <div class="dow sat">Sat</div>
+    </div>
+    <div class="weeks" id="weeksContainer"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>健康/医疗</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7F77DD"></div>学业</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>心态</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#aaa89f"></div>日常</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-date" id="modalDate"></div>
+    <div class="modal-title">今天做了什么？</div>
+    <div class="entries-list" id="entriesList"></div>
+    <button class="add-entry-btn" onclick="addEntryRow()">＋ 添加一条</button>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveEntries()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const MONTHS_ZH = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const COLORS = [
+    { key: 'teal',   hex: '#1D9E75' },
+    { key: 'purple', hex: '#7F77DD' },
+    { key: 'amber',  hex: '#BA7517' },
+    { key: 'gray',   hex: '#aaa89f' },
+  ];
+
+  // Preloaded data
+  const PRELOADED = {
+    '2026-6-6': [
+      { color: 'teal',   text: '约牙科初诊 6/12' },
+      { color: 'teal',   text: '决定下周问药店九价' },
+      { color: 'purple', text: 'CV lecture 10，坚持看了' },
+      { color: 'gray',   text: '2:40放下手机，有进步' },
+    ],
+    '2026-6-7': [
+      { color: 'purple', text: 'CV lecture 10' },
+      { color: 'gray',   text: '2:30放下手机' },
+    ],
+    '2026-6-8': [
+      { color: 'teal',   text: '约家庭医生打九价' },
+      { color: 'teal',   text: '电话订Gardasil 9' },
+      { color: 'gray',   text: '洗衣服床单毛巾' },
+      { color: 'amber',  text: '洗衣机吞10€，想开了' },
+    ],
+    '2026-6-12': [
+      { color: 'teal',   text: '牙科初诊 8:30' },
+    ],
+  };
+
+  let currentYear = 2026;
+  let currentMonth = 6;
+  let editingKey = null;
+
+  function storageKey(y, m, d) { return `diary_${y}_${m}_${d}`; }
+
+  function loadData(y, m, d) {
+    const key = `${y}-${m}-${d}`;
+    const stored = localStorage.getItem(storageKey(y, m, d));
+    if (stored) return JSON.parse(stored);
+    if (PRELOADED[key]) return PRELOADED[key];
+    return [];
+  }
+
+  function saveData(y, m, d, entries) {
+    localStorage.setItem(storageKey(y, m, d), JSON.stringify(entries));
+  }
+
+  function renderCalendar() {
+    const mName = MONTHS_EN[currentMonth - 1];
+    document.getElementById('monthDisplay').textContent = mName;
+    document.getElementById('yearDisplay').textContent = currentYear;
+
+    const today = new Date();
+    const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    const container = document.getElementById('weeksContainer');
+    container.innerHTML = '';
+
+    let dayCount = 1;
+    let cells = [];
+
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    while (dayCount <= daysInMonth) { cells.push(dayCount++); }
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    for (let w = 0; w < cells.length / 7; w++) {
+      const row = document.createElement('div');
+      row.className = 'week-row';
+      for (let d = 0; d < 7; d++) {
+        const val = cells[w * 7 + d];
+        const cell = document.createElement('div');
+        const isToday = val && today.getFullYear() === currentYear && (today.getMonth() + 1) === currentMonth && today.getDate() === val;
+        const isSun = d === 0, isSat = d === 6;
+
+        cell.className = 'day' + (val ? '' : ' empty') + (isToday ? ' today' : '') + (isSun && val ? ' sun' : '') + (isSat && val ? ' sat' : '');
+
+        if (val) {
+          const numSpan = document.createElement('span');
+          numSpan.className = 'day-num';
+          numSpan.textContent = val + (isToday ? ' ◎' : '');
+          cell.appendChild(numSpan);
+
+          const entries = loadData(currentYear, currentMonth, val);
+          entries.forEach(e => {
+            const line = document.createElement('div');
+            line.className = 'entry-line';
+            const dot = document.createElement('div');
+            dot.className = `dot dot-${e.color}`;
+            const txt = document.createElement('span');
+            txt.className = 'entry-text';
+            txt.textContent = e.text;
+            line.appendChild(dot);
+            line.appendChild(txt);
+            cell.appendChild(line);
+          });
+
+          cell.addEventListener('click', () => openModal(currentYear, currentMonth, val));
+        }
+
+        row.appendChild(cell);
+      }
+      container.appendChild(row);
+    }
+  }
+
+  function openModal(y, m, d) {
+    editingKey = { y, m, d };
+    const dateNames = ['日','一','二','三','四','五','六'];
+    const dow = new Date(y, m - 1, d).getDay();
+    document.getElementById('modalDate').textContent = `${y}年${m}月${d}日 · 星期${dateNames[dow]}`;
+
+    const entries = loadData(y, m, d);
+    const list = document.getElementById('entriesList');
+    list.innerHTML = '';
+    if (entries.length === 0) {
+      addEntryRow();
+    } else {
+      entries.forEach(e => addEntryRow(e));
+    }
+
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function addEntryRow(entry) {
+    const list = document.getElementById('entriesList');
+    const color = entry ? entry.color : 'gray';
+    const text = entry ? entry.text : '';
+
+    const row = document.createElement('div');
+    row.className = 'entry-row';
+
+    const picker = document.createElement('div');
+    picker.className = 'color-picker';
+    COLORS.forEach(c => {
+      const opt = document.createElement('div');
+      opt.className = 'color-opt' + (c.key === color ? ' selected' : '');
+      opt.style.background = c.hex;
+      opt.dataset.color = c.key;
+      opt.addEventListener('click', () => {
+        picker.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+      picker.appendChild(opt);
+    });
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'entry-input';
+    input.value = text;
+    input.placeholder = '记录一件事…';
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addEntryRow(); });
+
+    const rmBtn = document.createElement('button');
+    rmBtn.className = 'remove-btn';
+    rmBtn.textContent = '×';
+    rmBtn.addEventListener('click', () => row.remove());
+
+    row.appendChild(picker);
+    row.appendChild(input);
+    row.appendChild(rmBtn);
+    list.appendChild(row);
+    input.focus();
+  }
+
+  function saveEntries() {
+    const { y, m, d } = editingKey;
+    const rows = document.querySelectorAll('#entriesList .entry-row');
+    const entries = [];
+    rows.forEach(row => {
+      const text = row.querySelector('.entry-input').value.trim();
+      const selected = row.querySelector('.color-opt.selected');
+      const color = selected ? selected.dataset.color : 'gray';
+      if (text) entries.push({ color, text });
+    });
+    saveData(y, m, d, entries);
+    closeModal();
+    renderCalendar();
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    editingKey = null;
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+    if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+    renderCalendar();
+  }
+
+  function goToday() {
+    const t = new Date();
+    currentYear = t.getFullYear();
+    currentMonth = t.getMonth() + 1;
+    renderCalendar();
+  }
+
+  renderCalendar();
+</script>
+</body>
+</html>
